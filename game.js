@@ -106,9 +106,78 @@ function restart() {
     init();
 }
 
-function isConnected(x1,y1,x2,y2){
-
+function isConnected1(x1, y1, x2, y2) {
+    if (x1 === x2 && y1 === y2) {
+        return false;
+    }
+    if (x1 === x2) {
+        let yMin = Math.min(y1, y2);
+        let yMax = Math.max(y1, y2);
+        for (let y = yMin + 1; y < yMax; y++) {
+            if (matrix[x1][y] != -1) {
+                return false;
+            }
+        }
+        return true;
+    }
+    if (y1 === y2) {
+        let xMin = Math.min(x1, x2);
+        let xMax = Math.max(x1, x2);
+        for (let x = xMin + 1; x < xMax; x++) {
+            if (matrix[x][y1] != -1) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
-$("#restart").bind("click",restart);
+function isConnected2(x1, y1, x2, y2) {
+    if (x1 != x2 && y1 != y2) {
+        return (isConnected1(x1, y1, x2, y1) && isConnected1(x2, y1, x2, y2) && matrix[x2][y1] === -1)
+            || (isConnected1(x1, y1, x1, y2) && isConnected1(x1, y2, x2, y2) && matrix[x1][y2] === -1);
+    }
+    else {
+        return isConnected1(x1, y1, x2, y2);
+    }
+}
+
+function isConnected3(x1, y1, x2, y2) {
+    if (isConnected2(x1, y1, x2, y2)) {
+        return true;
+    }
+    if (matrix[x1][y1] === matrix[x2][y2]) {
+        let x = x1 + 1;
+        while (x < width && matrix[x][y1] === -1) {
+            if (isConnected2(x, y1, x2, y2)) {
+                return true;
+            }
+            x++;
+        }
+        x = x1 - 1;
+        while (x >= 0 && matrix[x][y1] === -1) {
+            if (isConnected2(x, y1, x2, y2)) {
+                return true;
+            }
+            x--;
+        }
+        let y = y1 + 1;
+        while (y < height && matrix[x1][y] === -1) {
+            if (isConnected2(x1, y, x2, y2)) {
+                return true;
+            }
+            y++;
+        }
+        y = y1 - 1;
+        while (y >= 0 && matrix[x1][y] === -1) {
+            if (isConnected2(x1, y, x2, y2)) {
+                return true;
+            }
+            y--;
+        }
+    }
+    return false;
+}
+
+$("#restart").bind("click", restart);
 
