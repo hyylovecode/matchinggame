@@ -59,20 +59,26 @@ var matrix = [
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
 ];
 
-function init() {
+function render() {
     $("#main").empty();
-    for (let i = 0; i < matrix.length; i++) {
+    for (let y = 0; y < matrix.length; y++) {
         // <table><tr id='row1'></tr>
-        $("#main").append("<tr id='row" + i.toString() + "'></tr>");
-        for (let j = 0; j < matrix[i].length; j++) {
-            let pic = matrix[i][j];
-            let picId = pictures[pic];
-            //<use xlink:href='#icon-youtube-play'></use>
-            let id = getId(j, i);
-            $("#row" + i.toString()).append("<td id='" + id + "'><i class='icon-adobe-illustrator'><svg class='num'><use xlink:href='#" + picId + "'></use></svg></i></td>");
-            $("#" + id).bind("click", function () {
-                clicked(j, i);
-            });
+        let rowId = "row" + y.toString();
+        $("#main").append(`<tr id='${rowId}'></tr>`);
+        for (let x = 0; x < matrix[y].length; x++) {
+            if (matrix[y][x] === -1) {
+                $("#" + rowId).append("<td></td>");
+            }
+            else {
+                let pic = matrix[y][x];
+                let picId = pictures[pic];
+                //<use xlink:href='#icon-youtube-play'></use>
+                let id = getId(x, y);
+                $("#" + rowId).append("<td id='" + id + "'><i class='icon-adobe-illustrator'><svg class='num'><use xlink:href='#" + picId + "'></use></svg></i></td>");
+                $("#" + id).bind("click", function () {
+                    clicked(x, y);
+                });
+            }
         }
     }
 }
@@ -83,7 +89,6 @@ function getId(x, y) {
 
 function createGame() {
     let usedPictureLen = pictures.length;
-    let totalNum = (width - 2) * (height - 2);
     let average = Math.ceil(totalNum / usedPictureLen);
     if (average % 2 === 1) {
         average++;
@@ -120,7 +125,7 @@ function createGame() {
 
 function restart() {
     createGame();
-    init();
+    render();
 }
 
 function isConnected1(x1, y1, x2, y2) {
@@ -200,26 +205,73 @@ function isConnected3(x1, y1, x2, y2) {
     return false;
 }
 
+function play() {
+    var audio = new Audio("./sounds/eliminate.wav");
+    audio.play();
+}
+
 let lastX = -1;
 let lastY = -1;
 function clicked(x, y) {
     if (lastX === -1 || !isConnected3(lastX, lastY, x, y)) {
+        let id = getId(lastX,lastY);
+        $(`#${id}`).removeClass("boardered");
         lastX = x;
         lastY = y;
+        id = getId(lastX,lastY);
+        $(`#${id}`).addClass("boardered");
     }
     else {
         //eliminate
+        play();
         let id1 = getId(x, y);
         let id2 = getId(lastX, lastY);
+        $(`#${id2}`).removeClass("boardered");
         $("#" + id1).empty();
         $("#" + id2).empty();
         matrix[y][x] = -1;
         matrix[lastY][lastX] = -1;
         lastX = -1;
         lastY = -1;
-
+        count += 2;
+        score = Math.floor(count / totalNum * 100);
+        console.log(score);
+        $("#score").text(`${score} %`);
     }
 }
 
+function shuffle() {
+    let shuffleArray = [];
+    let k = 0;
+    for (let i = 1; i < height - 1; i++) {
+        for (let j = 1; j < width - 1; j++) {
+            if (matrix[i][j] != -1) {
+                shuffleArray[k++] = matrix[i][j];
+            }
+        }
+    }
+    for (let i = 0; i < shuffleArray.length; i++) {
+        let temp = shuffleArray[i];
+        let random = Math.floor(shuffleArray.length * Math.random());
+        shuffleArray[i] = shuffleArray[random];
+        shuffleArray[random] = temp;
+    }
+    k = 0;
+    for (let i = 1; i < height - 1; i++) {
+        for (let j = 1; j < width - 1; j++) {
+            if (matrix[i][j] != -1) {
+                matrix[i][j] = shuffleArray[k++];
+            }
+        }
+    }
+
+    render();
+}
+
+let score = 0;
+let count = 0;
+const totalNum = (width - 2) * (height - 2);
+
+$("#shuffle").bind("click", shuffle);
 $("#restart").bind("click", restart);
 

@@ -10,6 +10,10 @@
       padding: 10px;
     }
 
+    #game {
+      background-image: url(./images/bg2.jpg);
+    }
+
     .operations {
       padding: 10px;
     }
@@ -20,36 +24,54 @@
       border-collapse: collapse;
     }
 
-    td {
-      padding: 0;
+    td:hover {
+      transform: scale(1.1);
+    }
 
+    .boardered{
+      /* add boarder */
+      border: 1px solid blue;
+    }
+
+    td {
+      padding: 0;     
       width: 40px;
       height: 40px;
+      border: 1px solid transparent;
     }
 
     body {
       text-align: center;
+      background-image: url(./images/bg2.jpg);
     }
 
     .num {
       height: 40px;
       width: 40px;
     }
+
+    #root {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: Center;
+    }
   </style>
   <script type="module" src="game.js"></script>
 </head>
 
 <body>
-  <div>
-    <div class="framework">
+  <div id="root">
+    <div class="framework" id="game">
       <table id="main"></table>
     </div>
     <div class="framework">
       <div class="operations">
-        <p>100%</p>
+        <p id="score"></p>
       </div>
       <div class="operations">
-        <input type="button" value="shuffle" />
+        <input id="shuffle" type="button" value="shuffle" />
       </div>
       <div class="operations">
         <input type="button" value="tip" />
