@@ -43,7 +43,6 @@ const pictures = [
     "icon-youtube-play",
 ];
 
-const width = 19, height = 12;
 var matrix = [
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18],
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
@@ -59,6 +58,17 @@ var matrix = [
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
 ];
 
+let width = 19;
+let height = 12;
+let score = 0;
+let count = 0;
+let totalNum = (width - 2) * (height - 2);
+let usedPictureLen = pictures.length;
+let average = Math.ceil(totalNum / usedPictureLen);
+let lastX = -1;
+let lastY = -1;
+let picToCoordinates = [];
+
 function render() {
     $("#main").empty();
     for (let y = 0; y < matrix.length; y++) {
@@ -68,13 +78,18 @@ function render() {
         for (let x = 0; x < matrix[y].length; x++) {
             if (matrix[y][x] === -1) {
                 $("#" + rowId).append("<td></td>");
-            }
-            else {
+            } else {
                 let pic = matrix[y][x];
                 let picId = pictures[pic];
                 //<use xlink:href='#icon-youtube-play'></use>
                 let id = getId(x, y);
-                $("#" + rowId).append("<td id='" + id + "'><i class='icon-adobe-illustrator'><svg class='num'><use xlink:href='#" + picId + "'></use></svg></i></td>");
+                $("#" + rowId).append(
+                    "<td id='" +
+                        id +
+                        "'><i class='icon-adobe-illustrator'><svg class='num'><use xlink:href='#" +
+                        picId +
+                        "'></use></svg></i></td>"
+                );
                 $("#" + id).bind("click", function () {
                     clicked(x, y);
                 });
@@ -88,8 +103,6 @@ function getId(x, y) {
 }
 
 function createGame() {
-    let usedPictureLen = pictures.length;
-    let average = Math.ceil(totalNum / usedPictureLen);
     if (average % 2 === 1) {
         average++;
     }
@@ -123,9 +136,35 @@ function createGame() {
     }
 }
 
+function bgMusicPlay() {
+    var audio = new Audio("./sounds/bgmusic3.mp3");
+    audio.loop = true;
+    audio.play();
+}
+
 function restart() {
+    bgMusicPlay();
     createGame();
     render();
+    score = 0;
+    $("#score").text(`${score} %`);
+    createPicToCoordinates();
+    console.log(picToCoordinates);
+    getTip();
+}
+
+function createPicToCoordinates() {
+    for (let i = 0; i < pictures.length; i++) {
+        picToCoordinates[i] = [];
+    }
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            if (matrix[y][x] != -1) {
+                let pair = [x, y];
+                picToCoordinates[matrix[y][x]].push(pair);
+            }
+        }
+    }
 }
 
 function isConnected1(x1, y1, x2, y2) {
@@ -156,10 +195,15 @@ function isConnected1(x1, y1, x2, y2) {
 
 function isConnected2(x1, y1, x2, y2) {
     if (x1 != x2 && y1 != y2) {
-        return (isConnected1(x1, y1, x2, y1) && isConnected1(x2, y1, x2, y2) && matrix[y1][x2] === -1)
-            || (isConnected1(x1, y1, x1, y2) && isConnected1(x1, y2, x2, y2) && matrix[y2][x1] === -1);
-    }
-    else {
+        return (
+            (isConnected1(x1, y1, x2, y1) &&
+                isConnected1(x2, y1, x2, y2) &&
+                matrix[y1][x2] === -1) ||
+            (isConnected1(x1, y1, x1, y2) &&
+                isConnected1(x1, y2, x2, y2) &&
+                matrix[y2][x1] === -1)
+        );
+    } else {
         return isConnected1(x1, y1, x2, y2);
     }
 }
@@ -168,8 +212,8 @@ function isConnected3(x1, y1, x2, y2) {
     if (x1 === x2 && y1 === y2) {
         return false;
     }
-    console.log(x1, y1, x2, y2);
-    if (matrix[y1][x1] === matrix[y2][x2]) {
+    //console.log(x1, y1, x2, y2);
+    if (matrix[y1][x1] === matrix[y2][x2] && matrix[y1][x1] != -1) {
         if (isConnected2(x1, y1, x2, y2)) {
             return true;
         }
@@ -210,23 +254,36 @@ function play() {
     audio.play();
 }
 
-let lastX = -1;
-let lastY = -1;
 function clicked(x, y) {
     if (lastX === -1 || !isConnected3(lastX, lastY, x, y)) {
-        let id = getId(lastX,lastY);
+        let id = getId(lastX, lastY);
         $(`#${id}`).removeClass("boardered");
         lastX = x;
         lastY = y;
-        id = getId(lastX,lastY);
-        $(`#${id}`).addClass("boardered");
-    }
-    else {
+        id = getId(lastX, lastY);
+        if (matrix[y][x] != -1) {
+            $(`#${id}`).addClass("boardered");
+        }
+    } else {
         //eliminate
         play();
         let id1 = getId(x, y);
         let id2 = getId(lastX, lastY);
         $(`#${id2}`).removeClass("boardered");
+
+        for (let i = 0; i < picToCoordinates[matrix[y][x]].length; i++) {
+            if (
+                (picToCoordinates[matrix[y][x]][i][0] === x &&
+                    picToCoordinates[matrix[y][x]][i][1] === y) ||
+                (picToCoordinates[matrix[y][x]][i][0] === lastX &&
+                    picToCoordinates[matrix[y][x]][i][1] === lastY)
+            ) {
+                picToCoordinates[matrix[y][x]].splice(i, 1);
+                i--;
+            }
+        }
+        console.log(picToCoordinates);
+
         $("#" + id1).empty();
         $("#" + id2).empty();
         matrix[y][x] = -1;
@@ -234,10 +291,39 @@ function clicked(x, y) {
         lastX = -1;
         lastY = -1;
         count += 2;
-        score = Math.floor(count / totalNum * 100);
-        console.log(score);
+        score = Math.floor((count / totalNum) * 100);
         $("#score").text(`${score} %`);
+        if (score === 100) {
+            setTimeout(function () {
+                alert("you won the game!");
+            }, 100);
+        }
+
+        getTip();
     }
+}
+
+function getTip() {
+    //if have tip,return two coorodinates.else return alert.
+    let picturesLength = Math.ceil(totalNum / average);
+    for (let i = 0; i < picturesLength; i++) {
+        let pic = picToCoordinates[i];
+        for (let j = 0; j < pic.length - 1; j++) {
+            for (let k = j + 1; k < pic.length; k++) {
+                let left = pic[j];
+                let right = pic[k];
+                if (isConnected3(left[0], left[1], right[0], right[1])) {
+                    let a = [
+                        [right[0], right[1]],
+                        [left[0], left[1]],
+                    ];
+                    console.log(a);
+                    return a;
+                }
+            }
+        }
+    }
+    alert("no solution.");
 }
 
 function shuffle() {
@@ -266,12 +352,10 @@ function shuffle() {
     }
 
     render();
+    createPicToCoordinates();
+    console.log(picToCoordinates);
+    getTip();
 }
-
-let score = 0;
-let count = 0;
-const totalNum = (width - 2) * (height - 2);
 
 $("#shuffle").bind("click", shuffle);
 $("#restart").bind("click", restart);
-
