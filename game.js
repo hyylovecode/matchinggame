@@ -312,7 +312,12 @@ function clicked(x, y) {
       }, 100);
     }
 
-    getTip();
+    const tips = getTip();
+    if (!tips) {
+        setTimeout(function() {
+            alert("No solution.Please shuffle.");
+        }, 100);
+    }
   }
 }
 
@@ -336,7 +341,8 @@ function getTip() {
       }
     }
   }
-  alert("No solution.Please shuffle.");
+
+  return undefined;
 }
 
 function shuffle() {
@@ -376,8 +382,10 @@ function untip() {
 }
 
 function tip() {
-  $(".num").addClass("dim");
   const [[x1, y1], [x2, y2]] = getTip();
+  if (!x1) return;
+
+  $(".num").addClass("dim");
   const id1 = getId(x1, y1);
   const id2 = getId(x2, y2);
   $(`#svg-${id1}`).addClass("highlight");
